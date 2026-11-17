@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f8f6ef">
+  <meta name="description" content="A Christmas mouse moves from pocket to pocket every day in December.">
+  <title>Jasper's Christmas Mouse Countdown</title>
+  <style>
+    :root { color-scheme: light; --evergreen: #173e2f; --burgundy: #821723; --gold: #e9be75; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #fff; color: #284332; }
+    .calendar { width: min(100%, 900px); margin: 0 auto; padding: 0 0 16px; }
+    .scene { width: 100%; aspect-ratio: 1 / 1; position: relative; isolation: isolate;
+             overflow: hidden; background: #fff url('assets/christmas-room.jpg') center / 100% 100% no-repeat;
+             container-type: inline-size; }
+    /* A stitched ribbon conceals the painted stationary mouse; the real mouse is a movable element. */
+    .ribbon { position: absolute; z-index: 2; left: 29.2%; top: 39.3%; width: 49.9%; height: 8.6%;
+      display: flex; align-items:center; justify-content: center; padding: 1.1%;
+      color: #fff2cf; text-align: center; font-size: 3.2cqw; letter-spacing: .01em;
+      font-weight: bold; line-height: 1.1;
+      text-shadow: 0 .15cqw .2cqw #4e0c0e;
+      background: repeating-linear-gradient(32deg, transparent 0 19px, #ffffff06 20px 22px),
+                  linear-gradient(145deg,#a42a34 0%,#7e1c27 45%,#5b1720 100%);
+      border: .9cqw solid #113b2b; border-radius: 1.4cqw 1.4cqw .45cqw .45cqw;
+      box-shadow: inset 0 0 0 .3cqw #ebbe80, inset 0 0 0 .5cqw #8a2930, 0 .5cqw .6cqw #241b1470;
+    }
+    .ribbon::before, .ribbon::after { content: '✦'; color: #f0c879; font-size: 2.5cqw; margin: 0 1.1cqw; }
+    .board { position:absolute; z-index:3; left:28.95%; top:46.70%; width:50.15%; height:37.85%;
+      border:.7cqw solid #204a36; border-radius: .6cqw;
+      background: radial-gradient(circle at 30% 25%,#4e7557aa,transparent 55%),
+                  repeating-linear-gradient(45deg,#143f31 0 4px,#194835 4px 8px);
+      box-shadow: 0 .3cqw .4cqw #33231c3b, inset 0 0 0 .2cqw #7c9966;
+    }
+    .board::before {content:'';pointer-events:none;position:absolute;inset:.25cqw;border:.15cqw dashed #c5ae76b0;border-radius:.4cqw;}
+    .grid { position:absolute; z-index:4; left:29.7%; top:47.2%; width:48.45%; height:36.15%;
+       display:grid; grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));
+       column-gap:.30cqw; row-gap:.55cqw; }
+    .pocket {position:relative; min-width:0; padding:0; margin:0; overflow:hidden;
+       border:0; background:transparent; border-radius:.45cqw; cursor:pointer;
+       filter: drop-shadow(0 .17cqw .2cqw #0e1d1460); transition:transform .2s ease,filter .2s ease; }
+    .pocket img {display:block;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;}
+    .pocket:focus-visible {outline:.5cqw solid #fff8b2;outline-offset:.1cqw;z-index:7;}
+    .pocket:hover { transform:translateY(-.35cqw); filter:brightness(1.08) drop-shadow(0 .35cqw .25cqw #0e1d1470);z-index:6; }
+    .pocket.today::after {content:'';position:absolute;inset:.2cqw;border:.25cqw dashed #f8d886;
+       border-radius:.35cqw;box-shadow:inset 0 0 .4cqw #ffe8a47a;pointer-events:none;}
+    .pocket:not(.unlocked) {cursor:default;}
+    .pocket:not(.unlocked):hover {transform:none;filter:drop-shadow(0 .17cqw .2cqw #0e1d1460);}
+    .mouse {position:absolute; z-index:8; width:14.58%; height:auto; max-width:none;
+      transform:translate(-60%,0); pointer-events:none; user-select:none;
+      filter:drop-shadow(.2cqw .35cqw .25cqw #0f170f69);
+      transition:left 1.3s cubic-bezier(.2,.72,.28,1.08),top 1.3s cubic-bezier(.2,.72,.28,1.08);
+      will-change:left,top;}
+    .scene.booting .mouse {transition:none;}
+    .status {margin:-.8% auto 0; padding:0 18px 8px; text-align:center;position:relative;z-index:9;}
+    .status-main {display:block;font-size:clamp(16px,3.6vw,25px);font-weight:bold;color:#7a202b;}
+    .status-detail {display:block;font-size:clamp(12px,2.6vw,16px);color:#4a624b;margin-top:4px;}
+    .tiny-note {text-align:center;margin:7px auto 0;font:12px/1.5 system-ui,sans-serif;color:#7e837c;max-width:600px;padding:0 14px;}
+    @media (max-width:450px){.calendar{padding-bottom:8px}.status{padding:0 7px 6px}.tiny-note{font-size:11px}}
+    @media (prefers-reduced-motion:reduce){.mouse,.pocket{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="calendar" aria-label="Interactive Christmas mouse Advent calendar">
+    <div class="scene booting" id="scene">
+      <div class="ribbon" aria-hidden="true">Christmas Countdown</div>
+      <div class="board" aria-hidden="true"></div>
+      <div class="grid" id="pockets" aria-label="December 1 through 24"></div>
+      <img class="mouse" id="mouse" src="assets/christmas-mouse.png" alt="A little Christmas mouse wearing a Santa hat and a knitted scarf">
+    </div>
+    <div class="status" role="status" aria-live="polite">
+      <span class="status-main" id="statusMain">The little mouse is getting ready for December!</span>
+      <span class="status-detail" id="statusDetail">Visit each day to see which pocket it chooses.</span>
+    </div>
+    <p class="tiny-note" id="hint">The mouse moves by itself each day in December. Tap an unlocked pocket for a little surprise.</p>
+  </main>
+<script>
+(() => {
+  'use strict';
+  // The website's Christmas calendar follows Central Time (Navarre, Florida).
+  // Change to another valid IANA time zone if your family moves.
+  const TIME_ZONE = 'America/Chicago';
+  const scene = document.getElementById('scene');
+  const mouse = document.getElementById('mouse');
+  const grid = document.getElementById('pockets');
+  const main = document.getElementById('statusMain');
+  const detail = document.getElementById('statusDetail');
+  const hint = document.getElementById('hint');
+  const messages = [
+    'A tiny wish for a magical December!','Warm cocoa makes cold mornings better.',
+    'Our little mouse has found a cozy pocket!','Every snowflake is one of a kind.',
+    'Five days of festive fun already!','A little kindness makes a big difference.',
+    'Could there be cookies in the kitchen?','The forest looks wonderful in snow.',
+    'Nine little reasons to smile today.','A cozy scarf is a mouse’s best friend.',
+    'The Christmas lights are twinkling!','A sweet surprise may be just around the corner.',
+    'Make room for a little extra joy.','Even a tiny mouse can have a big adventure.',
+    'A perfect evening for cocoa and cookies.','Just look at that snowy cottage!',
+    'The countdown is getting exciting!','The mouse heard the jingle of sleigh bells.',
+    'A holiday story sounds wonderful tonight.','Only a few more sleeps to go!',
+    'The mouse can hardly contain its excitement.','The gifts are nearly ready!',
+    'Tomorrow is Christmas Eve!','The mouse has reached the final pocket!'
+  ];
+  const params = new URLSearchParams(location.search);
+  const preview = Number(params.get('preview'));
+  const previewDay = Number.isInteger(preview) && preview >= 1 && preview <= 24 ? preview : null;
+  const buttons = [];
+  let lastDay = -1;
+  const fragment = document.createDocumentFragment();
+  for (let day = 1; day <= 24; day++) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pocket';
+    button.setAttribute('aria-label', `December ${day}`);
+    button.dataset.day = String(day);
+    const img = document.createElement('img');
+    img.src = `assets/pockets/${String(day).padStart(2, '0')}.webp`;
+    img.alt = '';
+    img.loading = 'eager';
+    img.draggable = false;
+    button.appendChild(img);
+    button.addEventListener('click', () => {
+      if (!button.classList.contains('unlocked')) return;
+      detail.textContent = `December ${day}: ${messages[day-1]}`;
+    });
+    buttons.push(button);
+    fragment.appendChild(button);
+  }
+  grid.appendChild(fragment);
+  function centralDate() {
+    try {
+      const d = new Intl.DateTimeFormat('en-US', {
+        timeZone: TIME_ZONE, year:'numeric', month:'numeric', day:'numeric'
+      }).formatToParts(new Date());
+      const v = Object.fromEntries(d.map(p => [p.type, Number(p.value)]));
+      return {year:v.year, month:v.month, day:v.day};
+    } catch(err) {
+      const n = new Date(); return {year:n.getFullYear(),month:n.getMonth()+1,day:n.getDate()};
+    }
+  }
+  function daysUntilChristmas(d) {
+    // UTC calendar arithmetic avoids DST errors; the calendar date itself is Central Time.
+    const targetYear = d.month === 12 && d.day > 25 ? d.year + 1 : d.year;
+    const start = Date.UTC(d.year,d.month-1,d.day);
+    const end = Date.UTC(targetYear,11,25);
+    return Math.max(0,Math.round((end-start)/86400000));
+  }
+  function refresh() {
+    const d = centralDate();
+    const active = previewDay ?? (d.month === 12 ? Math.min(d.day,24) : 1);
+    const unlockedThrough = previewDay ?? (d.month === 12 ? Math.min(d.day,24) : 0);
+    const key = `${d.year}/${d.month}/${d.day}/${active}`;
+    if (key === lastDay) return;
+    lastDay = key;
+    // Use original 1536×1536 illustration coordinates; percentages make it responsive.
+    const col = (active-1)%6, row = Math.floor((active-1)/6);
+    const pocketCenterX = 522 + 123.4*col;
+    const topY = 603 + 144*row;
+    mouse.style.left = `${(pocketCenterX / 1536 * 100).toFixed(4)}%`;
+    mouse.style.top = `${(topY / 1536 * 100).toFixed(4)}%`;
+    for (const b of buttons) {
+      const n = Number(b.dataset.day);
+      b.classList.toggle('today',n===active);
+      b.classList.toggle('unlocked',n<=unlockedThrough);
+      b.setAttribute('aria-label',`December ${n}${n===active?' – mouse is here':''}${n>unlockedThrough?' – not yet unlocked':''}`);
+    }
+    if (previewDay !== null) {
+      main.textContent = `Previewing December ${previewDay}`;
+      detail.textContent = 'The live calendar will use the real date when you remove ?preview= from the URL.';
+      hint.textContent = 'Preview mode is on. Remove ?preview= from the page address to return to the automatic countdown.';
+    } else if (d.month===12 && d.day<=24) {
+      const remaining = 25-d.day;
+      main.textContent = `Day ${d.day} • ${remaining} ${remaining===1?'day':'days'} until Christmas!`;
+      detail.textContent = `The Christmas mouse is visiting pocket ${d.day} today.`;
+    } else if (d.month===12 && d.day===25) {
+      main.textContent = 'Merry Christmas!';
+      detail.textContent = 'Our little mouse has visited all 24 pockets.';
+    } else if (d.month===12 && d.day>25) {
+      main.textContent = 'See you next December!';
+      detail.textContent = 'The Christmas mouse is ready for another snowy season.';
+    } else {
+      const days = daysUntilChristmas(d);
+      main.textContent = `${days} days until Christmas!`;
+      detail.textContent = 'The mouse starts visiting a new pocket each day on December 1.';
+    }
+  }
+  refresh();
+  // Defer transition activation until after first layout, avoiding a jump from the image corner.
+  requestAnimationFrame(() => requestAnimationFrame(() => scene.classList.remove('booting')));
+  // Keeps working on a page left open for days; also updates when returning to the tab.
+  setInterval(refresh,30*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden) refresh();});
+  window.addEventListener('pageshow',refresh);
+})();
+</script>
+</body>
+</html>
